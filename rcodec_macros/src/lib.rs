@@ -12,18 +12,26 @@
 extern crate syntax;
 extern crate rustc;
 
-use syntax::ast;
 use syntax::ast::{TokenTree, TtToken};
 use syntax::parse::token;
-use syntax::codemap::Span;
-use syntax::ext::base::{ExtCtxt, MacResult, MacEager, DummyResult};
+use syntax::ext::base::{MacResult, MacEager, DummyResult};
 use syntax::util::small_vector::SmallVector;
+
+use syntax::codemap::Span;
 use syntax::ptr::P;
+use syntax::ast;
+use syntax::ast::{Item, MetaItem, Expr};
+use syntax::attr;
+use syntax::ext::base::{Decorator, ExtCtxt};
+use syntax::ext::build::AstBuilder;
+use syntax::ext::deriving::generic::{combine_substructure, MethodDef, Substructure, TraitDef, ty};
+use syntax::parse::token::{intern, InternedString};
 use rustc::plugin::Registry;
  
 #[plugin_registrar]
 pub fn plugin_registrar(reg: &mut Registry) {
-    reg.register_macro("record_struct", expand_record_struct)
+    reg.register_macro("record_struct", expand_record_struct);
+    reg.register_syntax_extension(intern("HListSupport"), Decorator(Box::new(expand_hlist_support)));
 }
 
 /// This is a roundabout way of dealing with the fact that rustc does not allow for macros that expand to a type.
@@ -104,4 +112,115 @@ fn hlist_type(cx: &mut ExtCtxt, field_types: &[ast::Ident]) -> P<ast::Ty> {
         let rhs = hlist_type(cx, &field_types[1..]);
         quote_ty!(cx, HCons<$lhs, $rhs>)
     }
+}
+
+fn hnil_path() -> ty::Path<'static> {
+    ty::Path::new(vec!["rcodec","hlist","HNil"])
+}
+
+fn hcons_path(types: Vec<&'static str>) -> ty::Path<'static> {
+    if types.len() == 0 {
+        hnil_path()
+    } else {
+        let head = types[0];
+        let tail = if types.len() > 1 { types[1..].to_vec() } else { vec![] };
+        let head_ty = ty::Ty::Literal(ty::Path::new_local(head));
+        let tail_ty = ty::Ty::Literal(hcons_path(tail));
+        ty::Path::new_(vec!["rcodec","hlist","HCons"], None, vec![Box::new(head_ty), Box::new(tail_ty)], true)
+    }
+}
+
+pub fn expand_hlist_support(cx: &mut ExtCtxt, span: Span, mitem: &MetaItem, item: &Item, push: &mut FnMut(P<Item>)) {
+    // let struct_def = match item.node {
+    //     ast::ItemStruct(ref struct_def, ref _generics) => {
+    //         struct_def
+    //     },
+    //     _ => {
+    //         cx.span_err(span, "`HListSupport` may only be applied to structs");
+    //         return;
+    //     }
+    // };
+
+    let hlist_type = || {
+        // TODO: I have no idea how to convert ast::Ty to ty::Path :(
+        //let field_tys: Vec<P<ast::Ty>> = struct_def.fields.iter()
+        // let field_tys: Vec<&'static str> = struct_def.fields.iter()
+        //     .map(|field| field.node.ty.clone())
+        //     .map(|field_ty| field_ty.to_string())
+        //     .collect();
+        hcons_path(vec!["u8", "u8"])
+        //hcons_path(field_tys);
+    };
+
+    // impl AsHList<hlist_type> for <struct_type>
+    // e.g.:
+    //   impl AsHList<HCons<u8, HNil>> for Foo
+    let trait_def = TraitDef {
+        span: span,
+        attributes: Vec::new(),
+        path: ty::Path::new_(vec!["rcodec","codec","AsHList"], None, vec![Box::new(ty::Ty::Literal(hlist_type()))], true),
+        additional_bounds: Vec::new(),
+        generics: ty::LifetimeBounds::empty(),
+        methods: vec![
+            // fn from_hlist(<hlist_type>) -> Self;
+            MethodDef {
+                name: "from_hlist",
+                generics: ty::LifetimeBounds::empty(),
+                explicit_self: None,
+                args: vec![ty::Ty::Literal(hlist_type())],
+                ret_ty: ty::Self_,
+                attributes: vec![attr::mk_attr_outer(attr::mk_attr_id(),
+                                                     attr::mk_name_value_item_str(InternedString::new("inline"),
+                                                                                  InternedString::new("always")))],
+                combine_substructure: combine_substructure(Box::new(from_hlist_substructure))
+            },
+            // fn to_hlist(&self) -> <hlist_type>;
+            MethodDef {
+                name: "to_hlist",
+                generics: ty::LifetimeBounds::empty(),
+                explicit_self: ty::borrowed_explicit_self(),
+                args: vec![],
+                ret_ty: ty::Ty::Literal(hlist_type()),
+                attributes: vec![attr::mk_attr_outer(attr::mk_attr_id(),
+                                                     attr::mk_name_value_item_str(InternedString::new("inline"),
+                                                                                  InternedString::new("always")))],
+                combine_substructure: combine_substructure(Box::new(to_hlist_substructure))
+            }
+        ],
+        associated_types: vec![],
+    };
+    trait_def.expand(cx, mitem, item, |a| push(a))
+}
+
+fn from_hlist_substructure(cx: &mut ExtCtxt, trait_span: Span, _substr: &Substructure) -> P<Expr> {
+    let stmts = Vec::new();
+
+    // let fields = match *substr.fields {
+    //     Struct(ref fs) | EnumMatching(_, _, ref fs) => fs,
+    //     _ => cx.span_bug(trait_span, "Unsupported substructure in `HListSupport`")
+    // };
+
+    // TODO: Generate impl that looks like this:
+    // match hlist {
+    //     record_struct_hlist_pattern!($($fieldname),+) => $stype { $($fieldname: $fieldname),+ }
+    // }
+
+    cx.expr_block(cx.block(trait_span, stmts, None))
+}
+
+fn to_hlist_substructure(cx: &mut ExtCtxt, trait_span: Span, _substr: &Substructure) -> P<Expr> {
+    let stmts = Vec::new();
+
+    // let fields = match *substr.fields {
+    //     Struct(ref fs) | EnumMatching(_, _, ref fs) => fs,
+    //     _ => cx.span_bug(trait_span, "Unsupported substructure in `HListSupport`")
+    // };
+
+    // TODO: Generate impl that looks like this:
+    // hlist!($(self.$fieldname.clone()),+)
+    // for &FieldInfo { ref self_, span, .. } in fields.iter() {
+    //     stmts.push(make_hlist(span, self_.clone()));
+    // }
+
+    cx.expr_block(cx.block(trait_span, stmts, None))
 }
