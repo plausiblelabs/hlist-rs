@@ -154,7 +154,7 @@ fn hlist_init(cx: &mut ExtCtxt, field_names: &[ast::Ident]) -> Vec<TokenTree> {
     }
 }
 
-/// Recursive function that builds up a struct initializer list from an array of field names.
+/// Builds up a struct initializer list from an array of field names.
 fn struct_field_init(cx: &mut ExtCtxt, field_names: &[ast::Ident]) -> Vec<TokenTree> {
     let mut tts: Vec<TokenTree> = Vec::new();
     if field_names.len() >= 1 {
