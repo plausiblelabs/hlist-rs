@@ -7,7 +7,7 @@
 //
 
 #![crate_type = "dylib"]
-#![feature(rustc_private, plugin_registrar, quote)]
+#![feature(rustc_private, plugin_registrar, quote, slice_patterns)]
 
 extern crate syntax;
 extern crate rustc;
