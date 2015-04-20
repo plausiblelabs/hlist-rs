@@ -23,10 +23,11 @@ use rustc::plugin::Registry;
  
 #[plugin_registrar]
 pub fn plugin_registrar(reg: &mut Registry) {
-    reg.register_syntax_extension(intern("AsHList"), Decorator(Box::new(expand_hlist_support)));
+    reg.register_syntax_extension(intern("HListSupport"), Decorator(Box::new(expand_hlist_support)));
 }
 
-/// Handles the `AsHList` attribute applied to a struct by generating an `AsHList` implementation for the struct.
+/// Handles the `HListSupport` attribute applied to a struct by generating `FromHList` and `ToHList`
+/// implementations for the struct.
 pub fn expand_hlist_support(cx: &mut ExtCtxt, _span: Span, mitem: &MetaItem, item: &Item, push: &mut FnMut(P<Item>)) {
     match item.node {
         ItemStruct(ref struct_def, _) => {
@@ -35,7 +36,7 @@ pub fn expand_hlist_support(cx: &mut ExtCtxt, _span: Span, mitem: &MetaItem, ite
                 match field.kind {
                     StructFieldKind::NamedField(_, _) => {}
                     _ => {
-                        cx.span_err(mitem.span, "`Lensed` may only be applied to structs with named fields");
+                        cx.span_err(mitem.span, "`HListSupport` may only be applied to structs with named fields");
                         return;
                     }
                 }
@@ -44,13 +45,13 @@ pub fn expand_hlist_support(cx: &mut ExtCtxt, _span: Span, mitem: &MetaItem, ite
         }
         
         _ => {
-            cx.span_err(mitem.span, "`AsHList` may only be applied to structs");
+            cx.span_err(mitem.span, "`HListSupport` may only be applied to structs");
             return;
         }
     }
 }
 
-/// Generates an implementation of the `AsHList` implementation for a struct.
+/// Generates implementations of the `FromHList` and `ToHList` traits for a struct.
 fn derive_as_hlist(cx: &mut ExtCtxt, push: &mut FnMut(P<Item>), struct_item: &Item, struct_def: &StructDef) {
     // Extract the struct name
     let struct_name = struct_item.ident;
@@ -61,7 +62,7 @@ fn derive_as_hlist(cx: &mut ExtCtxt, push: &mut FnMut(P<Item>), struct_item: &It
         match field.kind {
             StructFieldKind::NamedField(ident, _) => ident,
             _ => {
-                panic!("`AsHList` may only be applied to structs with named fields")
+                panic!("`HListSupport` may only be applied to structs with named fields")
             }
         }
     }).collect();
@@ -78,21 +79,42 @@ fn derive_as_hlist(cx: &mut ExtCtxt, push: &mut FnMut(P<Item>), struct_item: &It
     // Build the struct initializer
     let struct_field_init = struct_field_init(cx, &field_names);
 
-    // Build the HList initializer
+    // Build the HList initializer for ToHList
+    let hlist_cloned_init = hlist_cloned_init(cx, &field_names);
+
+    // Build the HList initializer for IntoHList
     let hlist_init = hlist_init(cx, &field_names);
-    
-    // Push the impl item
+
+    // Push the FromHList impl item
     push_new_item(push, struct_item, quote_item!(
         cx,
         #[allow(dead_code)]
-        impl AsHList<$hlist_type> for $struct_name {
+        impl FromHList<$hlist_type> for $struct_name {
             fn from_hlist(hlist: $hlist_type) -> Self {
                 match hlist {
                     $hlist_pat => $struct_name { $struct_field_init }
                 }
             }
-            
+        }
+    ));
+
+    // Push the ToHList impl item
+    push_new_item(push, struct_item, quote_item!(
+        cx,
+        #[allow(dead_code)]
+        impl ToHList<$hlist_type> for $struct_name {
             fn to_hlist(&self) -> $hlist_type {
+                $hlist_cloned_init
+            }
+        }
+        ));
+
+    // Push the ToHList impl item
+    push_new_item(push, struct_item, quote_item!(
+        cx,
+        #[allow(dead_code)]
+        impl IntoHList<$hlist_type> for $struct_name {
+            fn into_hlist(self) -> $hlist_type {
                 $hlist_init
             }
         }
@@ -150,6 +172,17 @@ fn hlist_init(cx: &mut ExtCtxt, field_names: &[ast::Ident]) -> Vec<TokenTree> {
     } else {
         let lhs = field_names[0].clone();
         let rhs = hlist_init(cx, &field_names[1..]);
+        quote_tokens!(cx, HCons(self.$lhs, $rhs))
+    }
+}
+
+/// Recursive function that builds up an HList initializer from an array of field names.
+fn hlist_cloned_init(cx: &mut ExtCtxt, field_names: &[ast::Ident]) -> Vec<TokenTree> {
+    if field_names.is_empty() {
+        quote_tokens!(cx, HNil)
+    } else {
+        let lhs = field_names[0].clone();
+        let rhs = hlist_cloned_init(cx, &field_names[1..]);
         quote_tokens!(cx, HCons(self.$lhs.clone(), $rhs))
     }
 }
