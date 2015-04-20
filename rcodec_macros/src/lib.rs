@@ -166,24 +166,24 @@ fn hlist_pattern(cx: &mut ExtCtxt, field_names: &[ast::Ident]) -> P<ast::Pat> {
 }
 
 /// Recursive function that builds up an HList initializer from an array of field names.
-fn hlist_init(cx: &mut ExtCtxt, field_names: &[ast::Ident]) -> Vec<TokenTree> {
+fn hlist_init(cx: &mut ExtCtxt, field_names: &[ast::Ident]) -> P<ast::Expr> {
     if field_names.is_empty() {
-        quote_tokens!(cx, HNil)
+        quote_expr!(cx, HNil)
     } else {
         let lhs = field_names[0].clone();
         let rhs = hlist_init(cx, &field_names[1..]);
-        quote_tokens!(cx, HCons(self.$lhs, $rhs))
+        quote_expr!(cx, HCons(self.$lhs, $rhs))
     }
 }
 
 /// Recursive function that builds up an HList initializer from an array of field names.
-fn hlist_cloned_init(cx: &mut ExtCtxt, field_names: &[ast::Ident]) -> Vec<TokenTree> {
+fn hlist_cloned_init(cx: &mut ExtCtxt, field_names: &[ast::Ident]) -> P<ast::Expr> {
     if field_names.is_empty() {
-        quote_tokens!(cx, HNil)
+        quote_expr!(cx, HNil)
     } else {
         let lhs = field_names[0].clone();
         let rhs = hlist_cloned_init(cx, &field_names[1..]);
-        quote_tokens!(cx, HCons(self.$lhs.clone(), $rhs))
+        quote_expr!(cx, HCons(self.$lhs.clone(), $rhs))
     }
 }
 
