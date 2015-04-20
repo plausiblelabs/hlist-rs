@@ -26,7 +26,7 @@ pub fn plugin_registrar(reg: &mut Registry) {
     reg.register_syntax_extension(intern("HListSupport"), Decorator(Box::new(expand_hlist_support)));
 }
 
-/// Handles the `HListSupport` attribute applied to a struct by generating `FromHList` and `ToHList`
+/// Handles the `HListSupport` attribute applied to a struct by generating `FromHList`, `ToHList`, and `IntoHList`
 /// implementations for the struct.
 pub fn expand_hlist_support(cx: &mut ExtCtxt, _span: Span, mitem: &MetaItem, item: &Item, push: &mut FnMut(P<Item>)) {
     match item.node {
@@ -51,7 +51,7 @@ pub fn expand_hlist_support(cx: &mut ExtCtxt, _span: Span, mitem: &MetaItem, ite
     }
 }
 
-/// Generates implementations of the `FromHList` and `ToHList` traits for a struct.
+/// Generates implementations of the `FromHList`, `ToHList`, and `IntoHList` traits for a struct.
 fn derive_as_hlist(cx: &mut ExtCtxt, push: &mut FnMut(P<Item>), struct_item: &Item, struct_def: &StructDef) {
     // Extract the struct name
     let struct_name = struct_item.ident;
@@ -109,7 +109,7 @@ fn derive_as_hlist(cx: &mut ExtCtxt, push: &mut FnMut(P<Item>), struct_item: &It
         }
         ));
 
-    // Push the ToHList impl item
+    // Push the IntoHList impl item
     push_new_item(push, struct_item, quote_item!(
         cx,
         #[allow(dead_code)]
