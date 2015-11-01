@@ -7,57 +7,67 @@
 //
 
 #![crate_type = "dylib"]
-#![feature(rustc_private, plugin_registrar, quote, slice_patterns, collections)]
+#![feature(rustc_private, plugin_registrar, quote, slice_patterns, vec_push_all)]
 
 extern crate syntax;
 extern crate rustc;
 
 use syntax::ast;
-use syntax::ast::{Ident, Item, ItemStruct, MetaItem, StructFieldKind, StructDef, TokenTree};
+use syntax::ast::{Ident, Item, ItemStruct, MetaItem, StructField, StructFieldKind, TokenTree, VariantData};
 use syntax::attr::AttrMetaMethods;
 use syntax::codemap::Span;
 use syntax::parse::token::intern;
-use syntax::ext::base::{ExtCtxt, Decorator};
+use syntax::ext::base::{Annotatable, ExtCtxt, MultiItemDecorator, SyntaxExtension};
 use syntax::ptr::P;
 use rustc::plugin::Registry;
  
 #[plugin_registrar]
 pub fn plugin_registrar(reg: &mut Registry) {
-    reg.register_syntax_extension(intern("HListSupport"), Decorator(Box::new(expand_hlist_support)));
+    reg.register_syntax_extension(intern("HListSupport"), SyntaxExtension::MultiDecorator(Box::new(HListSupportDecorator)));
 }
 
 /// Handles the `HListSupport` attribute applied to a struct by generating `FromHList`, `ToHList`, and `IntoHList`
 /// implementations for the struct.
-pub fn expand_hlist_support(cx: &mut ExtCtxt, _span: Span, mitem: &MetaItem, item: &Item, push: &mut FnMut(P<Item>)) {
-    match item.node {
-        ItemStruct(ref struct_def, _) => {
-            for spanned_field in struct_def.fields.iter() {
-                let field = &spanned_field.node;
-                match field.kind {
-                    StructFieldKind::NamedField(_, _) => {}
+struct HListSupportDecorator;
+impl MultiItemDecorator for HListSupportDecorator {
+    fn expand(&self, cx: &mut ExtCtxt, _span: Span, mitem: &MetaItem, item: &Annotatable, push: &mut FnMut(Annotatable)) {
+        match *item {
+            Annotatable::Item(ref struct_item) => {
+                match struct_item.node {
+                    ItemStruct(VariantData::Struct(ref struct_fields, _), _) => {
+                        for spanned_field in struct_fields.iter() {
+                            let field = &spanned_field.node;
+                            match field.kind {
+                                StructFieldKind::NamedField(_, _) => {}
+                                _ => {
+                                    cx.span_err(mitem.span, "`HListSupport` may only be applied to structs with named fields");
+                                    return;
+                                }
+                            }
+                        }
+                        derive_as_hlist(cx, push, &struct_item, struct_fields);
+                    }
                     _ => {
-                        cx.span_err(mitem.span, "`HListSupport` may only be applied to structs with named fields");
+                        cx.span_err(mitem.span, "`HListSupport` may only be applied to structs");
                         return;
                     }
                 }
             }
-            derive_as_hlist(cx, push, item, struct_def);
-        }
-        
-        _ => {
-            cx.span_err(mitem.span, "`HListSupport` may only be applied to structs");
-            return;
+            _ => {
+                cx.span_err(mitem.span, "`HListSupport` may only be applied to struct items");
+                return;
+            }
         }
     }
 }
 
 /// Generates implementations of the `FromHList`, `ToHList`, and `IntoHList` traits for a struct.
-fn derive_as_hlist(cx: &mut ExtCtxt, push: &mut FnMut(P<Item>), struct_item: &Item, struct_def: &StructDef) {
+fn derive_as_hlist(cx: &mut ExtCtxt, push: &mut FnMut(Annotatable), struct_item: &Item, struct_fields: &Vec<StructField>) {
     // Extract the struct name
     let struct_name = struct_item.ident;
 
     // Extract the field names
-    let field_names: Vec<ast::Ident> = struct_def.fields.iter().map(|f| {
+    let field_names: Vec<ast::Ident> = struct_fields.iter().map(|f| {
         let field = &f.node;
         match field.kind {
             StructFieldKind::NamedField(ident, _) => ident,
@@ -68,7 +78,7 @@ fn derive_as_hlist(cx: &mut ExtCtxt, push: &mut FnMut(P<Item>), struct_item: &It
     }).collect();
     
     // Extract the field types
-    let field_types: Vec<P<ast::Ty>> = struct_def.fields.iter().map(|f| f.node.ty.clone()).collect();
+    let field_types: Vec<P<ast::Ty>> = struct_fields.iter().map(|f| f.node.ty.clone()).collect();
 
     // Build the HList type
     let hlist_type = hlist_type(cx, &field_types);
@@ -107,7 +117,7 @@ fn derive_as_hlist(cx: &mut ExtCtxt, push: &mut FnMut(P<Item>), struct_item: &It
                 $hlist_cloned_init
             }
         }
-        ));
+    ));
 
     // Push the IntoHList impl item
     push_new_item(push, struct_item, quote_item!(
@@ -123,7 +133,7 @@ fn derive_as_hlist(cx: &mut ExtCtxt, push: &mut FnMut(P<Item>), struct_item: &It
 
 /// Pushes the given item into the AST.  The new item will inherit the lint attributes of the existing item
 /// from which the new item was derived.
-fn push_new_item(push: &mut FnMut(P<Item>), existing_item: &Item, new_item_ptr: Option<P<Item>>) {
+fn push_new_item(push: &mut FnMut(Annotatable), existing_item: &Item, new_item_ptr: Option<P<Item>>) {
     let new_item = new_item_ptr.unwrap();
     
     // Keep the lint attributes of the previous item to control how the
@@ -137,10 +147,10 @@ fn push_new_item(push: &mut FnMut(P<Item>), existing_item: &Item, new_item_ptr: 
     }).cloned());
 
     // Push the new item into the AST
-    push(P(ast::Item {
+    push(Annotatable::Item(P(ast::Item {
         attrs: attrs,
         ..(*new_item).clone()
-    }))
+    })))
 }
 
 /// Recursive function that builds up an HList type from an array of field types.
