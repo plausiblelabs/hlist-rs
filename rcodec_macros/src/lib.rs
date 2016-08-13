@@ -7,19 +7,21 @@
 //
 
 #![crate_type = "dylib"]
-#![feature(rustc_private, plugin_registrar, quote, slice_patterns, vec_push_all)]
+#![feature(rustc_private, plugin_registrar, quote, slice_patterns)]
 
 extern crate syntax;
 extern crate rustc;
+extern crate rustc_plugin;
 
 use syntax::ast;
-use syntax::ast::{Ident, Item, ItemStruct, MetaItem, StructField, StructFieldKind, TokenTree, VariantData};
+use syntax::ast::{Item, ItemKind, MetaItem, StructField, VariantData};
 use syntax::attr::AttrMetaMethods;
 use syntax::codemap::Span;
 use syntax::parse::token::intern;
 use syntax::ext::base::{Annotatable, ExtCtxt, MultiItemDecorator, SyntaxExtension};
 use syntax::ptr::P;
-use rustc::plugin::Registry;
+use syntax::tokenstream::TokenTree;
+use rustc_plugin::Registry;
  
 #[plugin_registrar]
 pub fn plugin_registrar(reg: &mut Registry) {
@@ -34,15 +36,11 @@ impl MultiItemDecorator for HListSupportDecorator {
         match *item {
             Annotatable::Item(ref struct_item) => {
                 match struct_item.node {
-                    ItemStruct(VariantData::Struct(ref struct_fields, _), _) => {
-                        for spanned_field in struct_fields.iter() {
-                            let field = &spanned_field.node;
-                            match field.kind {
-                                StructFieldKind::NamedField(_, _) => {}
-                                _ => {
-                                    cx.span_err(mitem.span, "`HListSupport` may only be applied to structs with named fields");
-                                    return;
-                                }
+                    ItemKind::Struct(VariantData::Struct(ref struct_fields, _), _) => {
+                        for struct_field in struct_fields.iter() {
+                            if struct_field.ident.is_none() {
+                                cx.span_err(mitem.span, "`HListSupport` may only be applied to structs with named fields");
+                                return;
                             }
                         }
                         derive_as_hlist(cx, push, &struct_item, struct_fields);
@@ -68,17 +66,16 @@ fn derive_as_hlist(cx: &mut ExtCtxt, push: &mut FnMut(Annotatable), struct_item:
 
     // Extract the field names
     let field_names: Vec<ast::Ident> = struct_fields.iter().map(|f| {
-        let field = &f.node;
-        match field.kind {
-            StructFieldKind::NamedField(ident, _) => ident,
-            _ => {
+        match f.ident {
+            Some(ident) => ident,
+            None => {
                 panic!("`HListSupport` may only be applied to structs with named fields")
             }
         }
     }).collect();
     
     // Extract the field types
-    let field_types: Vec<P<ast::Ty>> = struct_fields.iter().map(|f| f.node.ty.clone()).collect();
+    let field_types: Vec<P<ast::Ty>> = struct_fields.iter().map(|f| f.ty.clone()).collect();
 
     // Build the HList type
     let hlist_type = hlist_type(cx, &field_types);
@@ -202,10 +199,10 @@ fn struct_field_init(cx: &mut ExtCtxt, field_names: &[ast::Ident]) -> Vec<TokenT
     let mut tts: Vec<TokenTree> = Vec::new();
     if field_names.len() >= 1 {
         let f0 = field_names[0].clone();
-        tts.push_all(&quote_tokens!(cx, $f0: $f0));
+        tts.extend_from_slice(&quote_tokens!(cx, $f0: $f0));
 
         for field_name in &field_names[1..] {
-            tts.push_all(&quote_tokens!(cx, , $field_name: $field_name));
+            tts.extend_from_slice(&quote_tokens!(cx, , $field_name: $field_name));
         }
     }
     tts
