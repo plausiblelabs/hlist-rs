@@ -1,0 +1,7 @@
+[package]
+name = "hlist"
+version = "0.0.1"
+authors = ["Chris Campbell <campbell@plausible.coop>"]
+
+[dependencies.hlist_macros]
+path = "hlist_macros"

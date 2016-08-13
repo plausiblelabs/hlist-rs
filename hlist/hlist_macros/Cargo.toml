@@ -1,8 +1,8 @@
 [package]
-name = "rcodec_macros"
+name = "hlist_macros"
 version = "0.0.1"
 authors = ["Chris Campbell <campbell@plausible.coop>"]
 
 [lib]
-name = "rcodec_macros"
+name = "hlist_macros"
 plugin = true
