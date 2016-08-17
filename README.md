@@ -1,6 +1,6 @@
 # hlist-rs
 
-This library provides support for heterogeneous lists (known as `HList`s).  An `HList` is a functional,
+This Rust library provides support for heterogeneous lists (known as `HList`s).  An `HList` is a functional,
 tuple-like, strongly-typed data structure that can contain elements of differing types.
 
 There are three layers in this library:
