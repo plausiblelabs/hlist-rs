@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2015 Plausible Labs Cooperative, Inc.
+// Copyright (c) 2015-2019 Plausible Labs Cooperative, Inc.
 // All rights reserved.
 //
 // HList macro implementations based on:
@@ -11,8 +11,6 @@
 /// # Examples
 ///
 /// ```
-/// #[macro_use]
-/// extern crate hlist;
 /// use hlist::*;
 /// 
 /// # fn main() {
