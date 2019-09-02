@@ -18,20 +18,12 @@ Add a dependency (or two) to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-hlist = { git = "https://opensource.plausible.coop/src/scm/rc/hlist-rs.git" }
-hlist_macros = { git = "https://opensource.plausible.coop/src/scm/rc/hlist-rs.git" }
+hlist = { git = "https://github.com/plausiblelabs/hlist-rs" }
 ```
 
 Then, in your crate:
 
 ```rust
-// The following allows for using custom `HListSupport` attribute defined in hlist_macros crate.
-#![feature(plugin, custom_attribute)]
-#![plugin(hlist_macros)]
-
-#[macro_use]
-extern crate hlist;
-
 use hlist::*;
 ```
 
@@ -47,10 +39,10 @@ The `hlist!` macro provides a convenient shorthand for constructing an `HList`:
 let x: HCons<u8, HCons<u32, HNil>> = hlist!(1u8, 666u32);
 ```
 
-The `HListSupport` attribute can be applied to a struct declaration to automatically implement support for converting that struct to/from an `HList` representation:
+The custom `HListSupport` derive attribute can be applied to a struct declaration to automatically implement support for converting that struct to/from an `HList` representation:
 
 ```rust
-#[HListSupport]
+#[derive(HListSupport)]
 struct TestStruct {
     foo: u8,
     bar: u32

@@ -1,17 +1,15 @@
 //
-// Copyright (c) 2016 Plausible Labs Cooperative, Inc.
+// Copyright (c) 2016-2019 Plausible Labs Cooperative, Inc.
 // All rights reserved.
 //
 
-// The following allows for using macros defined in the separate hlist_macros crate.
-#![feature(plugin, custom_attribute)]
-#![plugin(hlist_macros)]
+// Re-export the hlist_derive crate
+pub use hlist_derive::*;
 
 // The following is necessary to make exported macros visible.
 #[macro_use]
 mod macros;
+pub use self::macros::*;
 
 mod hlist;
-
-pub use self::macros::*;
 pub use self::hlist::*;

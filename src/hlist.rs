@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2015 Plausible Labs Cooperative, Inc.
+// Copyright (c) 2015-2019 Plausible Labs Cooperative, Inc.
 // All rights reserved.
 //
 // This implementation based on List type from:
@@ -57,6 +57,7 @@ pub trait IntoHList<H> where H: HList {
 
 #[cfg(test)]
 mod tests {
+    use hlist_derive::HListSupport;
     use super::*;
 
     #[test]
@@ -92,15 +93,13 @@ mod tests {
         }
     }
 
-    #[derive(Debug, PartialEq, Eq, Clone)]
-    #[HListSupport]
+    #[derive(Debug, PartialEq, Eq, Clone, HListSupport)]
     struct TestInnerStruct {
         f1: u8,
         f2: u8
     }
 
-    #[derive(Debug, PartialEq, Eq, Clone)]
-    #[HListSupport]
+    #[derive(Debug, PartialEq, Eq, Clone, HListSupport)]
     struct TestStruct {
         foo: u8,
         bar: TestInnerStruct
