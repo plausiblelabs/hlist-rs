@@ -7,11 +7,14 @@ matrix:
   allow_failures:
     - rust: nightly
   fast_finish: true
+branches:
+  only: 
+    - master
 before_script:
   - rustup component add rustfmt
   - rustup component add clippy
 script:
   - cargo build
   - cargo fmt --all -- --check
-  - cargo clippy --all-targets --all-features -- -D warnings
+  - cargo clippy --all --all-targets --all-features -- -D warnings
   - cargo test
