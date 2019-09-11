@@ -9,7 +9,10 @@
 /// A heterogeneous list that can hold elements of different types.
 pub trait HList {
     /// Creates a new `HCons` with the given `X` value in head position.
-    fn cons<X>(self, x: X) -> HCons<X, Self> where Self: Sized {
+    fn cons<X>(self, x: X) -> HCons<X, Self>
+    where
+        Self: Sized,
+    {
         HCons(x, self)
     }
 }
@@ -18,8 +21,7 @@ pub trait HList {
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct HNil;
 
-impl HList for HNil {
-}
+impl HList for HNil {}
 
 /// The "cons" of a head element of type `H` and a tail `HList`.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -37,28 +39,36 @@ impl<H, T: HList> HCons<H, T> {
     }
 }
 
-impl<H, T: HList> HList for HCons<H, T> {
-}
+impl<H, T: HList> HList for HCons<H, T> {}
 
 /// Allows for conversion from an `HList` to an instance of the `Self` type.
-pub trait FromHList<H> where H: HList {
+pub trait FromHList<H>
+where
+    H: HList,
+{
     fn from_hlist(hlist: H) -> Self;
 }
 
 /// Allows for copying the contents of `Self` into an `HList`.
-pub trait ToHList<H> where H: HList {
+pub trait ToHList<H>
+where
+    H: HList,
+{
     fn to_hlist(&self) -> H;
 }
 
 /// Allows for converting (and consuming) `Self` into an `HList`.
-pub trait IntoHList<H> where H: HList {
+pub trait IntoHList<H>
+where
+    H: HList,
+{
     fn into_hlist(self) -> H;
 }
 
 #[cfg(test)]
 mod tests {
-    use hlist_derive::HListSupport;
     use super::*;
+    use hlist_derive::HListSupport;
 
     #[test]
     fn head_should_work() {
@@ -96,13 +106,13 @@ mod tests {
     #[derive(Debug, PartialEq, Eq, Clone, HListSupport)]
     struct TestInnerStruct {
         f1: u8,
-        f2: u8
+        f2: u8,
     }
 
     #[derive(Debug, PartialEq, Eq, Clone, HListSupport)]
     struct TestStruct {
         foo: u8,
-        bar: TestInnerStruct
+        bar: TestInnerStruct,
     }
 
     #[test]
@@ -118,7 +128,8 @@ mod tests {
         }
 
         {
-            let s = TestStruct::from_hlist(hlist!(7u8, TestInnerStruct::from_hlist(hlist!(1u8, 2u8))));
+            let s =
+                TestStruct::from_hlist(hlist!(7u8, TestInnerStruct::from_hlist(hlist!(1u8, 2u8))));
             assert_eq!(s.foo, 7u8);
             assert_eq!(s.bar, TestInnerStruct { f1: 1, f2: 2 });
             let hlist0 = s.to_hlist();
