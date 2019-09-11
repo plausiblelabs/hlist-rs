@@ -16,7 +16,7 @@ See the next section for more details on usage of these layers.
 
 ## Usage
 
-Add a dependency (or two) to your `Cargo.toml`:
+Add a dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]

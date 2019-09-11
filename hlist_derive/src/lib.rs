@@ -90,10 +90,8 @@ fn hlist_type(mut fields: syn::punctuated::Iter<Field>) -> proc_macro2::TokenStr
             let lhs = field.ty.to_token_stream();
             let rhs = hlist_type(fields);
             quote!(HCons<#lhs, #rhs>)
-        },
-        None => {
-            quote!(HNil)
         }
+        None => quote!(HNil),
     }
 }
 
@@ -105,10 +103,8 @@ fn hlist_pattern(mut fields: syn::punctuated::Iter<Field>) -> proc_macro2::Token
             let lhs = field.ident.as_ref();
             let rhs = hlist_pattern(fields);
             quote!(HCons(#lhs, #rhs))
-        },
-        None => {
-            quote!(HNil)
         }
+        None => quote!(HNil),
     }
 }
 
@@ -120,10 +116,8 @@ fn hlist_init(mut fields: syn::punctuated::Iter<Field>) -> proc_macro2::TokenStr
             let lhs = field.ident.as_ref();
             let rhs = hlist_init(fields);
             quote!(HCons(self.#lhs, #rhs))
-        },
-        None => {
-            quote!(HNil)
         }
+        None => quote!(HNil),
     }
 }
 
@@ -135,10 +129,8 @@ fn hlist_cloned_init(mut fields: syn::punctuated::Iter<Field>) -> proc_macro2::T
             let lhs = field.ident.as_ref();
             let rhs = hlist_cloned_init(fields);
             quote!(HCons(self.#lhs.clone(), #rhs))
-        },
-        None => {
-            quote!(HNil)
         }
+        None => quote!(HNil),
     }
 }
 
