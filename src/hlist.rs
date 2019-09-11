@@ -111,8 +111,8 @@ mod tests {
 
     #[derive(Debug, PartialEq, Eq, Clone, HListSupport)]
     struct TestStruct {
-        foo: u8,
-        bar: TestInnerStruct,
+        byte_field: u8,
+        inner_struct: TestInnerStruct,
     }
 
     #[test]
@@ -130,8 +130,8 @@ mod tests {
         {
             let s =
                 TestStruct::from_hlist(hlist!(7u8, TestInnerStruct::from_hlist(hlist!(1u8, 2u8))));
-            assert_eq!(s.foo, 7u8);
-            assert_eq!(s.bar, TestInnerStruct { f1: 1, f2: 2 });
+            assert_eq!(s.byte_field, 7u8);
+            assert_eq!(s.inner_struct, TestInnerStruct { f1: 1, f2: 2 });
             let hlist0 = s.to_hlist();
             assert_eq!(hlist0, hlist!(7u8, TestInnerStruct { f1: 1, f2: 2 }));
             let hlist1 = s.into_hlist();
