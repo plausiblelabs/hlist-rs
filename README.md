@@ -32,7 +32,7 @@ Add a dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-pl-hlist = "1.0.0"
+pl-hlist = "1.0"
 ```
 
 Then, in your crate:
