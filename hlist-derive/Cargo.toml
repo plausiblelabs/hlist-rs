@@ -8,6 +8,7 @@ description = "Provides the HListSupport derive macro used in conjuction with th
 keywords = ["plausible", "hlist", "functional", "heterogeneous", "list"]
 homepage = "https://github.com/plausiblelabs/hlist-rs"
 repository = "https://github.com/plausiblelabs/hlist-rs"
+readme = "README.md"
 
 [lib]
 proc-macro = true

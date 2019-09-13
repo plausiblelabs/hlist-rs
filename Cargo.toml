@@ -8,6 +8,7 @@ description = "Provides support for heterogeneous lists (known as `HList`s), whi
 keywords = ["plausible", "hlist", "functional", "heterogeneous", "list"]
 homepage = "https://github.com/plausiblelabs/hlist-rs"
 repository = "https://github.com/plausiblelabs/hlist-rs"
+readme = "README.md"
 
 [badges]
 travis-ci = { repository = "plausiblelabs/hlist-rs" }
