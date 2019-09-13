@@ -1,10 +1,18 @@
 [package]
-name = "hlist"
-version = "0.1.0"
+name = "pl-hlist"
+version = "1.0.0"
 edition = "2018"
 authors = ["Chris Campbell <campbell@plausible.coop>"]
+license = "MIT"
+description = "Provides support for heterogeneous lists (known as `HList`s), which are functional, tuple-like, strongly-typed data structures that can contain elements of differing types."
+keywords = ["plausible", "hlist", "functional", "heterogeneous", "list"]
+homepage = "https://github.com/plausiblelabs/hlist-rs"
+repository = "https://github.com/plausiblelabs/hlist-rs"
+
+[badges]
+travis-ci = { repository = "plausiblelabs/hlist-rs" }
 
 [dependencies]
-hlist_derive = { path = "hlist_derive", version = "0.1.0" }
+pl-hlist-derive = { path = "hlist-derive", version = "1.0.0" }
 
 [workspace]

@@ -3,8 +3,8 @@
 // All rights reserved.
 //
 
-// Re-export the hlist_derive crate
-pub use hlist_derive::*;
+// Re-export the pl_hlist_derive crate
+pub use pl_hlist_derive::*;
 
 // The following is necessary to make exported macros visible.
 #[macro_use]

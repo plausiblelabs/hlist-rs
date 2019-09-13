@@ -1,0 +1,18 @@
+[package]
+name = "pl-hlist-derive"
+version = "1.0.0"
+edition = "2018"
+authors = ["Chris Campbell <campbell@plausible.coop>"]
+license = "MIT"
+description = "Provides the HListSupport derive macro used in conjuction with the `pl-hlist` crate."
+keywords = ["plausible", "hlist", "functional", "heterogeneous", "list"]
+homepage = "https://github.com/plausiblelabs/hlist-rs"
+repository = "https://github.com/plausiblelabs/hlist-rs"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "1.0.5"
+quote = "1.0.2"
+proc-macro2 = "1.0.1"
