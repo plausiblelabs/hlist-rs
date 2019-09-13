@@ -1,6 +1,18 @@
 # pl-hlist
 
-[![Build Status](https://travis-ci.com/plausiblelabs/hlist-rs.svg?branch=master)](https://travis-ci.com/plausiblelabs/hlist-rs)
+[![Build Status][travis-badge]][travis-url]
+[![Crates.io][crates-badge]][crates-url]
+[![Docs.rs][docs-badge]][docs-url]
+[![MIT licensed][mit-badge]][mit-url]
+
+[travis-badge]: https://travis-ci.com/plausiblelabs/hlist-rs.svg?branch=master
+[travis-url]: https://travis-ci.com/plausiblelabs/hlist-rs
+[crates-badge]: https://img.shields.io/crates/v/pl-hlist.svg
+[crates-url]: https://crates.io/crates/pl-hlist
+[docs-badge]: https://docs.rs/pl-hlist/badge.svg
+[docs-url]: https://docs.rs/pl-hlist
+[mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
+[mit-url]: LICENSE
 
 This Rust library provides support for heterogeneous lists (known as `HList`s).  An `HList` is a functional,
 tuple-like, strongly-typed data structure that can contain elements of differing types.
