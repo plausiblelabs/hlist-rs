@@ -11,7 +11,7 @@
 /// # Examples
 ///
 /// ```
-/// use hlist::*;
+/// use pl_hlist::*;
 ///
 /// # fn main() {
 /// let x: HCons<u8, HCons<u32, HNil>> = hlist!(1u8, 666u32);

@@ -1,4 +1,4 @@
-# hlist-rs
+# pl-hlist
 
 [![Build Status](https://travis-ci.com/plausiblelabs/hlist-rs.svg?branch=master)](https://travis-ci.com/plausiblelabs/hlist-rs)
 
@@ -20,13 +20,13 @@ Add a dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-hlist = { git = "https://github.com/plausiblelabs/hlist-rs" }
+pl-hlist = "1.0.0"
 ```
 
 Then, in your crate:
 
 ```rust
-use hlist::*;
+use pl_hlist::*;
 ```
 
 An `HList` can be constructed manually as follows:
@@ -60,4 +60,4 @@ assert_eq!(hlist0, hlist1);
 
 # License
 
-`hlist-rs` is distributed under an MIT license.  See LICENSE for more details.
+`pl-hlist` is distributed under an MIT license.  See LICENSE for more details.

@@ -68,7 +68,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hlist_derive::HListSupport;
+    use pl_hlist_derive::HListSupport;
 
     #[test]
     fn head_should_work() {
