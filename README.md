@@ -1,12 +1,12 @@
 # pl-hlist
 
-[![Build Status][travis-badge]][travis-url]
+[![Build Status][gh-actions-badge]][gh-actions-url]
 [![Crates.io][crates-badge]][crates-url]
 [![Docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
 
-[travis-badge]: https://travis-ci.com/plausiblelabs/hlist-rs.svg?branch=master
-[travis-url]: https://travis-ci.com/plausiblelabs/hlist-rs
+[gh-actions-badge]: https://github.com/plausiblelabs/hlist-rs/workflows/Build/badge.svg?event=push
+[gh-actions-url]: https://github.com/plausiblelabs/hlist-rs/actions?query=workflow%3ABuild+branch%3Amaster
 [crates-badge]: https://img.shields.io/crates/v/pl-hlist.svg
 [crates-url]: https://crates.io/crates/pl-hlist
 [docs-badge]: https://docs.rs/pl-hlist/badge.svg
