@@ -10,9 +10,6 @@ homepage = "https://github.com/plausiblelabs/hlist-rs"
 repository = "https://github.com/plausiblelabs/hlist-rs"
 readme = "README.md"
 
-[badges]
-travis-ci = { repository = "plausiblelabs/hlist-rs" }
-
 [dependencies]
 pl-hlist-derive = { path = "hlist-derive", version = "1.0.0" }
 
